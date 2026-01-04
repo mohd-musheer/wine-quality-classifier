@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wine Quality Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #7c3aed;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen py-12 px-4">
+
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-800 flex items-center justify-center gap-3">
+                <i data-lucide="glass-water" class="text-purple-600"></i>
+                Wine Quality AI
+            </h1>
+            <p class="text-gray-600 mt-2">Enter the chemical properties to predict the wine category.</p>
+        </div>
+
+        <div class="glass rounded-2xl shadow-xl p-8">
+            <form id="predictForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="inputsContainer" class="contents"></div>
+
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 mt-6 border-t pt-6">
+                    <button type="submit" id="submitBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition duration-200 flex items-center justify-center gap-2">
+                        <span>Analyze Quality</span>
+                        <div id="loader" class="loader hidden"></div>
+                    </button>
+                </div>
+            </form>
+
+            <div id="resultCard" class="hidden mt-8 p-6 rounded-xl text-center transition-all animate-bounce-short">
+                <p class="text-sm uppercase tracking-widest text-gray-500 font-semibold">Prediction Result</p>
+                <h2 id="resultText" class="text-3xl font-black mt-1"></h2>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Input Configuration
+        const fields = [
+            { id: 'fixed_acidity', label: 'Fixed Acidity', placeholder: '7.4' },
+            { id: 'volatile_acidity', label: 'Volatile Acidity', placeholder: '0.7' },
+            { id: 'citric_acid', label: 'Citric Acid', placeholder: '0.0' },
+            { id: 'residual_sugar', label: 'Residual Sugar', placeholder: '1.9' },
+            { id: 'chlorides', label: 'Chlorides', placeholder: '0.076' },
+            { id: 'free_sulfur_dioxide', label: 'Free SO2', placeholder: '11.0' },
+            { id: 'total_sulfur_dioxide', label: 'Total SO2', placeholder: '34.0' },
+            { id: 'density', label: 'Density', placeholder: '0.9978' },
+            { id: 'pH', label: 'pH Level', placeholder: '3.51' },
+            { id: 'sulphates', label: 'Sulphates', placeholder: '0.56' },
+            { id: 'alcohol', label: 'Alcohol %', placeholder: '9.4' }
+        ];
+
+        // Render Inputs
+        const container = document.getElementById('inputsContainer');
+        fields.forEach(field => {
+            container.innerHTML += `
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold text-gray-700">${field.label}</label>
+                    <input type="number" step="any" name="${field.id}" placeholder="${field.placeholder}" required
+                        class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-400 focus:outline-none transition">
+                </div>
+            `;
+        });
+
+        // Form Handling
+        const form = document.getElementById('predictForm');
+        const loader = document.getElementById('loader');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultCard = document.getElementById('resultCard');
+        const resultText = document.getElementById('resultText');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            // UI States
+            loader.classList.remove('hidden');
+            submitBtn.disabled = true;
+            resultCard.classList.add('hidden');
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                // Show Result with Color Coding
+                resultCard.classList.remove('hidden');
+                resultText.innerText = result.output;
+                
+                if (result.output.includes('Bad')) {
+                    resultCard.className = 'mt-8 p-6 rounded-xl text-center bg-red-100 text-red-800 border-2 border-red-200';
+                } else if (result.output.includes('OK')) {
+                    resultCard.className = 'mt-8 p-6 rounded-xl text-center bg-yellow-100 text-yellow-800 border-2 border-yellow-200';
+                } else {
+                    resultCard.className = 'mt-8 p-6 rounded-xl text-center bg-green-100 text-green-800 border-2 border-green-200';
+                }
+
+            } catch (error) {
+                alert("Error connecting to the API");
+            } finally {
+                loader.classList.add('hidden');
+                submitBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>
