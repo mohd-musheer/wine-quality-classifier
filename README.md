@@ -1,6 +1,7 @@
 # 🍷 Wine Quality Predictive Analytics
 
-A high-performance Machine Learning pipeline built with **Scikit-Learn** to classify wine quality based on physicochemical properties.
+A high-performance Machine Learning pipeline built with **Scikit-Learn** to classify wine quality based on physicochemical properties.<Br>
+
 running on : https://wine-quality-classifier.onrender.com
 
 
