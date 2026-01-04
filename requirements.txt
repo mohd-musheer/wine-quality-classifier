@@ -1,7 +1,6 @@
-scikit-learn
+scikit-learn==1.6.1
 joblib
 pandas
 fastapi
 fastapi.responses
-fastapi.middleware.cors
 pydantic
